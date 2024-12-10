@@ -2,7 +2,7 @@
 title: "Simulation"
 author: "Jiahao Cao"
 date: "12/10/2024"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -12,9 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 # Simulation Example
 
 This is an R Markdown document for the paper
-``
-Bayesian Spatio-temporal Small Area Modeling: A Case Study of Estimating Late-Stage Melanoma Incidence in Texas
-``
+\begin{center} \textbf{Bayesian Spatio-temporal Small Area Modeling: A Case Study of Estimating Late-Stage Melanoma Incidence in Texas.} \end{center}
+
 
 Let $t \in [T]$ denote the discrete time of interest, and let $i \in [M]$ represent the geographical units (e.g., counties). For each diagnosed individual $j \in [n_{it}]$ within area $i$ at time $t$, let $y_{itj}$ denote the stage of melanoma. Specifically, $Y_{itj} = 1$ if the individual is in late-stage melanoma, and $Y_{itj} = 0$ if the individual is in the early stage. At each time $t$, for each individual $j$ in area $i$, let $\mathbf{x}_{itj} \in \mathbb{R}^{p+1}$ denote the corresponding unit-level covariates, and let $\mathbf{z}_{it} \in \mathbb{R}^{q}$ denote the area-level covariates. Additionally, the population is categorized into different strata $\{1,2,\ldots,H\}$ based on cross-tabulated demographic variables such as sex and race/ethnicity. We use $h_{itj} \in [H]$ and $g_{itj}$ to represent the stratum and the age, respectively, of the individual $j$ in area $i$ at time $t$.
 
