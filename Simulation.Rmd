@@ -62,7 +62,8 @@ t_design = DATA$dxyear
 H = length(unique(h_design))
 
 # Basis function 
-internal_nodes = as.vector(quantile(DATA$age, probs = seq(0,1,length.out=J-degree+1)[-c(1,J-degree+1)]))
+internal_nodes = as.vector(quantile(DATA$age, 
+                            probs = seq(0,1,length.out=J-degree+1)[-c(1,J-degree+1)]))
 Phi = Bspline.Basis(DATA$age, r = J, knots = internal_nodes, degree = degree) 
 MI = array(0, dim = c(T, M, L))
 for(t in 1:T){
@@ -189,15 +190,15 @@ constants <- list(
     Phi = Phi,
     MI = MI,
     kappasq_alpha = kappasq_alpha, # regression coeff
-    kappasq_0 = kappasq_0, kappasq_1 = kappasq_1, kappasq_B = kappasq_B, a_xi = a_xi, b_xi = b_xi,   # Age AR
-    kappasq_2 = kappasq_2, kappasq_A = kappasq_A, a_eta = a_eta, b_eta = b_eta     # Spatial AR
+    kappasq_0 = kappasq_0, kappasq_1 = kappasq_1, kappasq_B = kappasq_B, a_xi = a_xi, b_xi = b_xi,
+    kappasq_2 = kappasq_2, kappasq_A = kappasq_A, a_eta = a_eta, b_eta = b_eta   
 )   
 
 inits <- list(
-    alpha_latent = rep(0, q), include = rep(1,q), # sigmasq = 1, e = rep(0, n)   # regression coeffs and var
-    xi = array(0, dim = c(H, T, J)), mu_xi = rep(0, J), sigmasq_xi = 1, B = diag(J),  # Age AR
-    eta = matrix(0, T, L), sigmasq_eta = 1,  A = diag(L),   # Spatial AR
-    mu_delta = 0, sigmasq_delta = 1, delta = rep(0, M) # delta
+    alpha_latent = rep(0, q), include = rep(1,q), 
+    xi = array(0, dim = c(H, T, J)), mu_xi = rep(0, J), sigmasq_xi = 1, B = diag(J),
+    eta = matrix(0, T, L), sigmasq_eta = 1,  A = diag(L),
+    mu_delta = 0, sigmasq_delta = 1, delta = rep(0, M) 
 )
 data = list(
     y = y
@@ -217,7 +218,8 @@ print(errors)
 
 # Set up the MCMC configuration
 mcmcConf <- configureMCMC(model)
-mcmcConf$setMonitors('alpha_latent', 'alpha', 'xi', 'eta','include', 'delta', 'mu_delta', 'sigmasq_delta')
+mcmcConf$setMonitors('alpha_latent', 'alpha', 'xi', 'eta',
+                    'include', 'delta', 'mu_delta', 'sigmasq_delta')
 # Build and compile the MCMC
 mcmc <- buildMCMC(mcmcConf)
 Cmodel <- compileNimble(model)
@@ -303,16 +305,20 @@ prob_summary_M_H_T_Age_lower = array(0, dim = c(M,H,T,num_G))
 for(i in 1:M){
     temp_i = delta[, i, drop = FALSE]
     for (t in 1:T){
-        temp_it =  temp_i + alpha[, 1:q]%*% as.vector(Z[t,i,1:q]) + eta[, t, 1:L]%*%as.vector(MI[t,i,1:L]) 
+        temp_it =  temp_i + alpha[, 1:q]%*% as.vector(Z[t,i,1:q]) + 
+                               eta[, t, 1:L]%*%as.vector(MI[t,i,1:L]) 
         for(h in 1:H){for(i_age in 1:num_G){
-            prob_summary_M_H_T_Age_MCMC[,i,h,t,i_age] = as.vector(temp_it + xi[, h, t, 1:J]%*% as.vector(phi_grid[i_age, 1:J]))
+            prob_summary_M_H_T_Age_MCMC[,i,h,t,i_age] = 
+                            as.vector(temp_it + xi[, h, t, 1:J]%*% as.vector(phi_grid[i_age, 1:J]))
         }}
     }
 }
 prob_summary_M_H_T_Age_MCMC = ilogit( prob_summary_M_H_T_Age_MCMC )  
 prob_summary_M_H_T_Age <- apply(prob_summary_M_H_T_Age_MCMC, c(2, 3, 4, 5), mean)
-prob_summary_M_H_T_Age_upper <- apply(prob_summary_M_H_T_Age_MCMC, c(2, 3, 4, 5), quantile, probs = c(0.95))
-prob_summary_M_H_T_Age_lower <- apply(prob_summary_M_H_T_Age_MCMC, c(2, 3, 4, 5), quantile, probs = c(0.05))
+prob_summary_M_H_T_Age_upper <- apply(prob_summary_M_H_T_Age_MCMC, 
+                                           c(2, 3, 4, 5), quantile, probs = c(0.95))
+prob_summary_M_H_T_Age_lower <- apply(prob_summary_M_H_T_Age_MCMC, 
+                                           c(2, 3, 4, 5), quantile, probs = c(0.05))
 prob_summary_M_H_T_Age_average_mcmc <- apply(prob_summary_M_H_T_Age_MCMC, 1, mean)
 
 # Make prediction to all individuals
@@ -326,8 +332,8 @@ for(i_individual in 1:n){
     t = t_design[i_individual]
     h = h_design[i_individual]
     prob_summary_individuals_MCMC[,i_individual] = delta[, i, drop = FALSE] + 
-                                                alpha[, 1:q]%*% as.vector(Z[t,i,1:q]) + eta[, t, 1:L]%*%as.vector(MI[t,i,1:L])  + 
-                                                as.vector(xi[, h, t, 1:J]%*% as.vector(Phi_Data[i_individual, 1:J]))
+                        alpha[, 1:q]%*% as.vector(Z[t,i,1:q]) + eta[, t, 1:L]%*%as.vector(MI[t,i,1:L])  + 
+                        as.vector(xi[, h, t, 1:J]%*% as.vector(Phi_Data[i_individual, 1:J]))
 }
 
 prob_summary_individuals_MCMC = ilogit( prob_summary_individuals_MCMC )
@@ -336,8 +342,10 @@ prob_summary_individuals_upper <- apply(prob_summary_individuals_MCMC, 2, quanti
 prob_summary_individuals_lower <- apply(prob_summary_individuals_MCMC, 2, quantile, probs = c(0.05))
 prob_summary_individuals_average_mcmc = apply(prob_summary_individuals_MCMC, 1, mean)
 
-save(prob_summary_M_H_T_Age, prob_summary_M_H_T_Age_upper, prob_summary_M_H_T_Age_lower, prob_summary_M_H_T_Age_average_mcmc,
-     prob_summary_individuals, prob_summary_individuals_upper, prob_summary_individuals_lower, prob_summary_individuals_average_mcmc,
+save(prob_summary_M_H_T_Age, prob_summary_M_H_T_Age_upper, 
+     prob_summary_M_H_T_Age_lower, prob_summary_M_H_T_Age_average_mcmc,
+     prob_summary_individuals, prob_summary_individuals_upper, 
+     prob_summary_individuals_lower, prob_summary_individuals_average_mcmc,
      file = 'Data/Posterior_summary_ALL.RData')
 ```
 
