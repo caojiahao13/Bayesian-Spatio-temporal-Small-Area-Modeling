@@ -18,9 +18,9 @@ This is an R Markdown document for the paper
 Let $t \in [T]$ denote the discrete time of interest, and let $i \in [M]$ represent the geographical units (e.g., counties). For each diagnosed individual $j \in [n_{it}]$ within area $i$ at time $t$, let $y_{itj}$ denote the stage of melanoma. Specifically, $Y_{itj} = 1$ if the individual is in late-stage melanoma, and $Y_{itj} = 0$ if the individual is in the early stage. At each time $t$, for each individual $j$ in area $i$, let $\mathbf{x}_{itj} \in \mathbb{R}^{p+1}$ denote the corresponding unit-level covariates, and let $\mathbf{z}_{it} \in \mathbb{R}^{q}$ denote the area-level covariates. Additionally, the population is categorized into different strata $\{1,2,\ldots,H\}$ based on cross-tabulated demographic variables such as sex and race/ethnicity. We use $h_{itj} \in [H]$ and $g_{itj}$ to represent the stratum and the age, respectively, of the individual $j$ in area $i$ at time $t$.
 
 The proposed model takes the following form:
+$$y_{itj}\mid p_{itj} \sim \mathrm{Bernoulli}(p_{itj}),$$
 $$
-y_{itj}\mid p_{itj} \sim \mathrm{Bernoulli}(p_{itj}),\\
-\theta_{itj} := \mathrm{logit}(p_{itj}) = \mathbf{x}_{itj}^\top \boldsymbol{\beta} + \mathbf{z}_{it}^\top \boldsymbol{\alpha} + G_{itj} + \delta_i + \epsilon_{it},
+\theta_{itj} := \mathrm{logit}(p_{itj}) = \mathbf{x}_{itj}^\top  \boldsymbol{\beta} + \mathbf{z}_{it}^\top \boldsymbol{\alpha} + G_{itj} + \delta_i + \epsilon_{it},
 $$
 where $\epsilon_{it}$ is a latent spatiotemporal process, $\delta_i$ is a latent area-level effect, and $G_{itj}$ represents the effect of an individual's age $g_{itj}$, given the corresponding stratum $h_{ij}$ at time $t$. Our focus is on estimating the regression coefficients $\boldsymbol{\beta} = (\beta_1, \ldots, \beta_p)^\top$, $\boldsymbol{\alpha} = (\alpha_1, \ldots, \alpha_q)^\top$, as well as the age effect $G$ across different times and strata.
 
