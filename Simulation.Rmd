@@ -1,5 +1,6 @@
 ---
-title: "Simulation"
+title: "Bayesian Spatio-temporal Small Area Modeling: A Case Study of Estimating Late-Stage Melanoma Incidence in Texas"
+subtitle: "Simulation Example"
 author: "Jiahao Cao"
 date: "12/10/2024"
 output: pdf_document
@@ -9,10 +10,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Simulation Example
-
-This is an R Markdown document for the paper
-\begin{center} \textbf{Bayesian Spatio-temporal Small Area Modeling: A Case Study of Estimating Late-Stage Melanoma Incidence in Texas.} \end{center}
+This is an R Markdown document for the paper \textbf{Bayesian Spatio-temporal Small Area Modeling: A Case Study of Estimating Late-Stage Melanoma Incidence in Texas}, where we demonstrate how to fit the proposed Bayesian Mixed-effect Spatial-temporal Logistic Regression Model (BMSTLM) using a simulated dataset. The simulated data is based on the geography of 254 counties in Texas, over XXX time points. 
 
 
 Let $t \in [T]$ denote the discrete time of interest, and let $i \in [M]$ represent the geographical units (e.g., counties). For each diagnosed individual $j \in [n_{it}]$ within area $i$ at time $t$, let $y_{itj}$ denote the stage of melanoma. Specifically, $Y_{itj} = 1$ if the individual is in late-stage melanoma, and $Y_{itj} = 0$ if the individual is in the early stage. At each time $t$, for each individual $j$ in area $i$, let $\mathbf{x}_{itj} \in \mathbb{R}^{p+1}$ denote the corresponding unit-level covariates, and let $\mathbf{z}_{it} \in \mathbb{R}^{q}$ denote the area-level covariates. Additionally, the population is categorized into different strata $\{1,2,\ldots,H\}$ based on cross-tabulated demographic variables such as sex and race/ethnicity. We use $h_{itj} \in [H]$ and $g_{itj}$ to represent the stratum and the age, respectively, of the individual $j$ in area $i$ at time $t$.
@@ -102,7 +100,7 @@ for(i in 1:n){
 }
 y = DATA$stage
 
-save(DATA, Z, alpha, Phi, xi, MI, eta, delta, file = 'Data/data.RData')
+#save(DATA, Z, alpha, Phi, xi, MI, eta, delta, file = 'Data/data.RData')
 ```
 
 
