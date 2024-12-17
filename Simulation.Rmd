@@ -374,7 +374,7 @@ ggplot(DATA_summary, aes(x = prob_truth, y = prob_pred)) +
 ggsave(file = 'Data/Prob_Overall_compare.pdf', width = 8, height = 6)
 ```
 
-Finally, we present the trace plots for the estimates of the regression coefficients $(\alpha_1,\alpha_2,\alpha_3,\alpha_4,\alpha_5)$. The trace plots indicate that BMSTLM accurately estimates the county-level regression covariates and succeeds in identifying non-zero coefficients. 
+Finally, we present the trace plots for the estimates of the regression coefficients $(\alpha_1,\alpha_2,\alpha_3,\alpha_4,\alpha_5)$. The trace plots indicate that BMSTLM accurately estimates the county-level regression coefficients and succeeds in identifying non-zero coefficients. 
 ```{r}
 load(file = 'Data/MCMCsamples.RData')
 posterior_params = as.data.frame(samples_save)
