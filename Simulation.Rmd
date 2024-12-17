@@ -22,6 +22,8 @@ $$
 $$
 where $\epsilon_{it}$ is a latent spatiotemporal process, $\delta_i$ is a latent area-level effect, and $G_{itj}$ represents the effect of an individual's age $g_{itj}$, given the corresponding stratum $h_{ij}$ at time $t$. Our focus is on estimating the regression coefficients $\boldsymbol{\beta} = (\beta_1, \ldots, \beta_p)^\top$, $\boldsymbol{\alpha} = (\alpha_1, \ldots, \alpha_q)^\top$, as well as the age effect $G$ across different times and strata.
 
+We generate data according to the above model where the spatial domain contains $M = 254$ Texas counties, and $T = 10$ years are considered. Given each county $i \in [M]$ and year $t \in [T]$, $n_{it} = 30$ observations are collected, with the population equally assigned into $H = 3$ strata. Overall, we obtain $76,200$ observations. We generate $q = 20$ county-level covariates independently from a standard normal distribution. The regression coefficients are set to $\alpha_i = 1$ if $i \leq 2$ and $\alpha_i = 0$ otherwise, mimicking a sparse regression scenario. For the basis functions, we select $J = L = 8$. 
+
 ## 1. Data generation
 
 ```{r eval = FALSE}
@@ -36,7 +38,7 @@ source('Functions//Basis_functions.R')
 ```
 
 ```{r eval = FALSE}
-n_it = 10  # number of samples in each county at each time
+n_it = 30  # number of samples in each county at each time
 T = 10
 num_group = 3
 M = dim(Adj_mat)[1]
@@ -51,7 +53,7 @@ J = 8
 # Generete covariates
 set.seed(0)
 Z = array(rnorm(T*M*q), dim = c(T, M, q))
-DATA = expand.grid(stage = rep(1, n_it), group = seq(num_group), county = seq(M), dxyear = seq(T))
+DATA = expand.grid(stage = rep(1, n_it/num_group), group = seq(num_group), county = seq(M), dxyear = seq(T))
 DATA$age = runif(n)
 
 county_design = DATA$county
@@ -350,9 +352,7 @@ save(prob_summary_M_H_T_Age, prob_summary_M_H_T_Age_upper,
 
 ## Estimated Late-Stage Probability
 
-To investigate the estimation performance of the proposed model, we calculate the late-stage probabilities for all individuals in the dataset and then average these probabilities for each county. We also calculate the "observed" county-level late-stage probability as the late-stage proportion for each county. 
-
-A comparison of the observed and predicted late-stage probabilities is depicted in the following code chunk. We find that the predictions match the observed values well. 
+To investigate the estimation performance of the proposed model, we calculate the true average late-stage probabilities averaged over each cross-classification of county, year, and stratum, and compare them with their corresponding predictive values based on posterior mean estimates. The simulation results show that the predictions match the true values very well, indicating that BMSTLM can accurately estimate the unobserved true late-stage probabilities. 
 
 ```{r}
 library(tidyverse)
@@ -360,14 +360,14 @@ load(file = 'Data/data.RData')
 load(file = 'Data/Posterior_summary_ALL.RData')
 DATA_temp = DATA
 DATA_temp$stage_pred = prob_summary_individuals
-DATA_summary = DATA_temp %>% group_by(county) %>% 
-            summarize(prob_obs = mean(stage, na.rm = TRUE), prob_pred= mean(stage_pred, na.rm = TRUE))
+DATA_summary = DATA_temp %>% group_by(county, dxyear, group) %>% 
+            summarize(prob_truth = mean(prob, na.rm = TRUE), prob_pred= mean(stage_pred, na.rm = TRUE))
 
-ggplot(DATA_summary, aes(x = prob_obs, y = prob_pred)) +
+ggplot(DATA_summary, aes(x = prob_truth, y = prob_pred)) +
   geom_point(size = 2, color = 'orange') + 
   geom_abline(intercept = 0, slope = 1, color = "blue", linetype = "dashed") + 
-  labs(x = "Observed Late-stage Probability", y = "Predicted Late-stage Probability") + 
-  xlim(0.3, 1) + ylim(0.3, 1) + 
+  labs(x = "True Late-stage Probability", y = "Predicted Late-stage Probability") + 
+  xlim(0, 1) + ylim(0, 1) + 
   theme_minimal() + 
   theme(axis.title = element_text(size = 15), axis.text = element_text(size = 20), 
         legend.position = NULL 
@@ -375,13 +375,13 @@ ggplot(DATA_summary, aes(x = prob_obs, y = prob_pred)) +
 ggsave(file = 'Data/Prob_Overall_compare.pdf', width = 8, height = 6)
 ```
 
-Finally, we present the trace plots for the estimates of the regression coefficients $\alpha_1$, $\alpha_2$, and $\alpha_3$.
+Finally, we present the trace plots for the estimates of the regression coefficients $(\alpha_1,\alpha_2,\alpha_3,\alpha_4,\alpha_5)$. The trace plots indicate that BMSTLM accurately estimates the county-level regression covariates and succeeds in identifying non-zero coefficients. 
 ```{r}
 load(file = 'Data/MCMCsamples.RData')
 posterior_params = as.data.frame(samples_save)
-mcmc_samples = posterior_params[,c('alpha[1]','alpha[2]','alpha[3]')]
+mcmc_samples = posterior_params[,c('alpha[1]','alpha[2]','alpha[3]','alpha[4]','alpha[5]')]
 df = data.frame(iter = seq(dim(mcmc_samples)[1]), value = as.vector(as.matrix(mcmc_samples)), 
-                variable = rep( c('alpha[1]','alpha[2]','alpha[3]'),
+                variable = rep( c('alpha[1]','alpha[2]','alpha[3]','alpha[4]','alpha[5]'),
                             each = dim(mcmc_samples)[1]   ))
 ggplot(df) + geom_path(aes(x = iter, y = value), color = 'red') + 
             facet_grid(variable ~ ., scales = 'free_y', labeller = label_parsed) +
@@ -391,5 +391,5 @@ ggplot(df) + geom_path(aes(x = iter, y = value), color = 'red') +
             theme(axis.text=element_text(size=20),axis.title=element_text(size=25)) + 
             theme(strip.text=element_text(size=20)) + 
             theme(panel.spacing = unit(1, 'lines')) 
-ggsave(filename = 'Data/Traceplot.pdf', width = 10, height = 10)
+ggsave(filename = 'Data/Traceplot.pdf', width = 10, height = 15)
 ```{r}
