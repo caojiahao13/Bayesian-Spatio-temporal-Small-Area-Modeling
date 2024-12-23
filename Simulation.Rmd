@@ -374,7 +374,7 @@ ggplot(DATA_summary, aes(x = prob_truth, y = prob_pred)) +
 ggsave(file = 'Data/Prob_Overall_compare.pdf', width = 8, height = 6)
 ```
 
-Finally, we present the trace plots for the estimates of the regression coefficients $(\alpha_1, \alpha_2, \alpha_3, \alpha_4)$, as well as the initial basis coefficient vector values $(\xi_{1(1)}(1), \xi_{2(1)}(1), \xi_{3(1)}(1))$. The respective true values are represented by orange vertical lines. The trace plots indicate that BMSTLM accurately estimates both the county-level regression coefficients and the basis coefficient vector values, and successfully identifies non-zero county-level regression coefficients.
+Finally, we present the trace plots for the estimates of the regression coefficients $(\alpha_1, \alpha_2, \alpha_3, \alpha_4)$, as well as the initial basis coefficient vector values $(\xi_{1(1)}(1), \xi_{2(1)}(1), \xi_{3(1)}(1))$. The respective true values are represented by orange horizontal lines. The trace plots indicate that BMSTLM accurately estimates both the county-level regression coefficients and the basis coefficient vector values, and successfully identifies non-zero county-level regression coefficients.
 ```{r}
 load(file = 'Data/MCMCsamples.RData')
 posterior_params = as.data.frame(samples_save)
