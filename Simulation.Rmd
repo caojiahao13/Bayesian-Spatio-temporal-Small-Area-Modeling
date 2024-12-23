@@ -374,21 +374,28 @@ ggplot(DATA_summary, aes(x = prob_truth, y = prob_pred)) +
 ggsave(file = 'Data/Prob_Overall_compare.pdf', width = 8, height = 6)
 ```
 
-Finally, we present the trace plots for the estimates of the regression coefficients $(\alpha_1,\alpha_2,\alpha_3,\alpha_4,\alpha_5)$. The trace plots indicate that BMSTLM accurately estimates the county-level regression coefficients and succeeds in identifying non-zero coefficients. 
+Finally, we present the trace plots for the estimates of the regression coefficients $(\alpha_1, \alpha_2, \alpha_3, \alpha_4)$, as well as the initial basis coefficient vector values $(\xi_{1(1)}(1), \xi_{2(1)}(1), \xi_{3(1)}(1))$. The respective true values are represented by orange vertical lines. The trace plots indicate that BMSTLM accurately estimates both the county-level regression coefficients and the basis coefficient vector values, and successfully identifies non-zero county-level regression coefficients.
 ```{r}
 load(file = 'Data/MCMCsamples.RData')
 posterior_params = as.data.frame(samples_save)
-mcmc_samples = posterior_params[,c('alpha[1]','alpha[2]','alpha[3]','alpha[4]','alpha[5]')]
+
+mcmc_samples = as.matrix(posterior_params[,c( paste("alpha", "[", c(1,2,3,4), "]", sep = "") , paste("xi[", c(1,2,3), ", 1, 1]", sep = "") ) ] )
 df = data.frame(iter = seq(dim(mcmc_samples)[1]), value = as.vector(as.matrix(mcmc_samples)), 
-                variable = rep( c('alpha[1]','alpha[2]','alpha[3]','alpha[4]','alpha[5]'),
-                            each = dim(mcmc_samples)[1]   ))
-ggplot(df) + geom_path(aes(x = iter, y = value), color = 'red') + 
+                variable = rep( c('alpha[1]','alpha[2]','alpha[3]','alpha[4]',"xi[\"1(1)\"](1)", "xi[\"2(1)\"](1)", "xi[\"3(1)\"](1)"),
+                    each = dim(mcmc_samples)[1]),
+                truth = rep( c(1,1,0,0,1,2,3), each = dim(mcmc_samples)[1]) )
+
+
+figure = ggplot(df) + geom_path(aes(x = iter, y = value), color = 'red') + 
             facet_grid(variable ~ ., scales = 'free_y', labeller = label_parsed) +
             labs(x = 'Sampling Iteration', y =  "Posterior Samples")+ 
+            geom_hline(aes(yintercept = truth), color = 'orange') + 
             theme(legend.key.size = unit(1, 'cm'),
                   legend.title = element_text(size=20),legend.text = element_text(size=15)) +
             theme(axis.text=element_text(size=20),axis.title=element_text(size=25)) + 
             theme(strip.text=element_text(size=20)) + 
             theme(panel.spacing = unit(1, 'lines')) 
-ggsave(filename = 'Data/Traceplot.pdf', width = 10, height = 15)
+ggsave(figure, filename = 'Data/Traceplot.pdf', width = 10, height = 20)
+
+knitr::include_graphics('Data/Traceplot.pdf')
 ```{r}
