@@ -33,7 +33,7 @@ library(splines2)
 load('Data/polygons_list_bycounty.RData')  # county_list, polygons_list_bycounty
 load('Data/Adj_mat.RData')
 Adj_mat = as.matrix(Adj_mat) # 254*254
-source('Functions//Basis_functions.R')
+source('Functions/Basis_functions.R')
 ```
 
 ```{r eval = FALSE}
@@ -41,7 +41,7 @@ n_it = 30  # number of samples in each county at each time
 T = 10
 num_group = 3
 M = dim(Adj_mat)[1]
-n = n_it*M*T*num_group
+n = n_it*M*T
 q = 20
 q0 = 2
 
@@ -348,7 +348,6 @@ save(prob_summary_M_H_T_Age, prob_summary_M_H_T_Age_upper,
      file = 'Data/Posterior_summary_ALL.RData')
 ```
 
-
 ## Estimated Late-Stage Probability
 
 To investigate the estimation performance of the proposed model, we calculate the true average late-stage probabilities averaged over each cross-classification of county, year, and stratum, and compare them with their corresponding predictive values based on posterior mean estimates. The simulation results show that the predictions match the true values very well, indicating that BMSTLM can accurately estimate the unobserved true late-stage probabilities. 
@@ -375,6 +374,7 @@ ggsave(file = 'Data/Prob_Overall_compare.pdf', width = 8, height = 6)
 ```
 
 Finally, we present the trace plots for the estimates of the regression coefficients $(\alpha_1, \alpha_2, \alpha_3, \alpha_4)$, as well as the initial basis coefficient vector values $(\xi_{11}(1), \xi_{21}(1), \xi_{31}(1))$. The respective true values are represented by orange horizontal lines. The trace plots indicate that BMSTLM accurately estimates both the county-level regression coefficients and the basis coefficient vector values, and successfully identifies non-zero county-level regression coefficients.
+
 ```{r}
 load(file = 'Data/MCMCsamples.RData')
 posterior_params = as.data.frame(samples_save)
@@ -396,6 +396,40 @@ figure = ggplot(df) + geom_path(aes(x = iter, y = value), color = 'red') +
             theme(strip.text=element_text(size=20)) + 
             theme(panel.spacing = unit(1, 'lines')) 
 ggsave(figure, filename = 'Data/Traceplot.pdf', width = 10, height = 20)
+```
 
+```{r, echo=FALSE}
 knitr::include_graphics('Data/Traceplot.pdf')
+```
+
+
+## Model Comparison
+
+At last, we implement "Area Linear", which is the Bayesian Binomial linear regression model using county-level covariates as predictors, and "BMSTLM Linear", where the demographic effect $G_{itj}$ of BMSTLM is modeled through a linear model based on the case's age and stratum.
+
+
+```{r eval = FALSE}
+source('Functions/BMSTLMLinear.R')
+save(samples_save, waic_results, file ='Data/BMSTLMLinear_MCMCsamples.RData')
+save(prob_summary_M_H_T_Age, prob_summary_M_H_T_Age_upper, 
+     prob_summary_M_H_T_Age_lower, prob_summary_M_H_T_Age_average_mcmc,
+     prob_summary_individuals, prob_summary_individuals_upper, 
+     prob_summary_individuals_lower, prob_summary_individuals_average_mcmc, 
+     file = 'Data/BMSTLMLinear_Posterior_summary_ALL.RData')
+
+source('Functions/GLMM.R')
+save(fit_bayes, log_lik, waic_result, file  = 'Data/GLMM_MCMCsamples.RData')
+```
+
+We compare these models using the Watanabe-Akaike Information Criterion (WAIC). The results indicate that BMSTLM achieves the best performance with the lowest WAIC of $74715.38$, while the competitive models "Area Linear" and "BMSTLM Linear" achieve WAIC values of $79238.85$ and $77940.32$, respectively.
+
 ```{r}
+load(file ='Data/MCMCsamples.RData')
+WAIC_BMSTLM = waic_results$WAIC
+load(file ='Data/BMSTLMLinear_MCMCsamples.RData')
+WAIC_BMSTLM_linear = waic_results$WAIC
+load(file ='Data/GLMM_MCMCsamples.RData')
+WAIC_GLMM = waic_result$estimates['waic','Estimate']
+cat(sprintf('The WAIC values of Area Linear, BMSTLM Linear, and BMSTLM are \n
+        %.2f, %.2f, %.2f, respectively', WAIC_GLMM, WAIC_BMSTLM_linear, WAIC_BMSTLM ))
+```
