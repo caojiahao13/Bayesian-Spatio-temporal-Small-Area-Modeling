@@ -10,16 +10,16 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This is an R Markdown document for the paper \textbf{Bayesian Spatio-temporal Small Area Modeling: A Case Study of Estimating Late-Stage Melanoma Incidence in Texas}, where we demonstrate how to fit the proposed Bayesian Mixed-effect Spatial-temporal Logistic Regression Model (BMSTLM) using a simulated dataset. The simulated data is based on the geography of 254 counties in Texas, over 10 time points. 
+This is an R Markdown document for the paper \textbf{Bayesian Spatio-temporal Small Area Modeling: A Case Study of Estimating Late-Stage Melanoma Incidence in Texas}, where we demonstrate how to fit the proposed Bayesian Heterogeneous Spatio-Temporal Logistic Regression with Nonlinear Demographic Effect (BHSTLR-NDE) using a simulated dataset. The simulated data is based on the geography of 254 counties in Texas, over 10 time points. 
 
-Let $t \in [T]$ denote the discrete time of interest, and let $i \in [M]$ represent the geographical units (e.g., counties). For each diagnosed individual $j \in [n_{it}]$ within area $i$ at time $t$, let $y_{itj}$ denote the stage of melanoma. Specifically, $Y_{itj} = 1$ if the individual is in late-stage melanoma, and $Y_{itj} = 0$ if the individual is in the early stage. At each time $t$, for each individual $j$ in area $i$, let $\mathbf{x}_{itj} \in \mathbb{R}^{p+1}$ denote the corresponding unit-level covariates, and let $\mathbf{z}_{it} \in \mathbb{R}^{q}$ denote the area-level covariates. Additionally, the population is categorized into different strata $\{1,2,\ldots,H\}$ based on cross-tabulated demographic variables such as sex and race/ethnicity. We use $h_{itj} \in [H]$ and $g_{itj}$ to represent the stratum and the age, respectively, of the individual $j$ in area $i$ at time $t$.
+Let $t \in [T]$ denote the discrete time of interest, and let $i \in [M]$ represent the geographical units (e.g., counties). For each diagnosed case $j \in [n_{it}]$ within area $i$ at time $t$, let $y_{itj}$ denote the stage of melanoma. Specifically, $Y_{itj} = 1$ if the case is in late-stage melanoma, and $Y_{itj} = 0$ if the case is in the early stage. At each time $t$, for each case $j$ in area $i$ let $\mathbf{z}_{it} \in \mathbb{R}^{q}$ denote the county-level covariates. Additionally, the population is categorized into different strata $\{1,2,\ldots,H\}$ based on cross-tabulated demographic variables such as sex and race/ethnicity. We use $h_{itj} \in [H]$ and $g_{itj}$ to represent the stratum and the age, respectively, of the case $j$ in area $i$ at time $t$.
 
 The proposed model takes the following form:
 $$y_{itj}\mid p_{itj} \sim \mathrm{Bernoulli}(p_{itj}),$$
 $$
-\theta_{itj} := \mathrm{logit}(p_{itj}) = \mathbf{x}_{itj}^\top  \boldsymbol{\beta} + \mathbf{z}_{it}^\top \boldsymbol{\alpha} + G_{itj} + \delta_i + \epsilon_{it},
+\theta_{itj} := \mathrm{logit}(p_{itj}) = \mathbf{z}_{it}^\top \boldsymbol{\alpha} + G_{itj} + \delta_i + \epsilon_{it},
 $$
-where $\epsilon_{it}$ is a latent spatiotemporal process, $\delta_i$ is a latent area-level effect, and $G_{itj}$ represents the effect of an individual's age $g_{itj}$, given the corresponding stratum $h_{ij}$ at time $t$. Our focus is on estimating the regression coefficients $\boldsymbol{\beta} = (\beta_1, \ldots, \beta_p)^\top$, $\boldsymbol{\alpha} = (\alpha_1, \ldots, \alpha_q)^\top$, as well as the age effect $G$ across different times and strata.
+where $\epsilon_{it}$ is a latent spatiotemporal process, $\delta_i$ is a latent county-level effect, and $G_{itj}$ represents the effect of an case's age $g_{itj}$, given the corresponding stratum $h_{ij}$ at time $t$. Our focus is on estimating the regression coefficients $\boldsymbol{\beta} = (\beta_1, \ldots, \beta_p)^\top$, $\boldsymbol{\alpha} = (\alpha_1, \ldots, \alpha_q)^\top$, as well as the age effect $G$ across different times and strata.
 
 We generate data according to the above model where the spatial domain contains $M = 254$ Texas counties, and $T = 10$ years are considered. Given each county $i \in [M]$ and year $t \in [T]$, $n_{it} = 30$ observations are collected, with the population equally assigned into $H = 3$ strata. Overall, we obtain $76,200$ observations. We generate $q = 20$ county-level covariates independently from a standard normal distribution. The regression coefficients are set to $\alpha_i = 1$ if $i \leq 2$ and $\alpha_i = 0$ otherwise, mimicking a sparse regression scenario. For the basis functions, we select $J = L = 8$. 
 
@@ -320,7 +320,7 @@ prob_summary_M_H_T_Age_lower <- apply(prob_summary_M_H_T_Age_MCMC,
                                            c(2, 3, 4, 5), quantile, probs = c(0.05))
 prob_summary_M_H_T_Age_average_mcmc <- apply(prob_summary_M_H_T_Age_MCMC, 1, mean)
 
-# Make prediction to all individuals
+# Make prediction to all cases
 Phi_Data = Bspline.Basis(DATA$age, r = J, knots = internal_nodes, degree = degree) 
 prob_summary_individuals_MCMC = matrix(0, num_save, n)
 prob_summary_individuals = rep(0, n)
@@ -350,7 +350,7 @@ save(prob_summary_M_H_T_Age, prob_summary_M_H_T_Age_upper,
 
 ## Estimated Late-Stage Probability
 
-To investigate the estimation performance of the proposed model, we calculate the true average late-stage probabilities averaged over each cross-classification of county, year, and stratum, and compare them with their corresponding predictive values based on posterior mean estimates. The simulation results show that the predictions match the true values very well, indicating that BMSTLM can accurately estimate the unobserved true late-stage probabilities. 
+To investigate the estimation performance of the proposed model, we calculate the true average late-stage probabilities averaged over each cross-classification of county, year, and stratum, and compare them with their corresponding predictive values based on posterior mean estimates. The simulation results show that the predictions match the true values very well, indicating that BHSTLR-NDE can accurately estimate the unobserved true late-stage probabilities. 
 
 ```{r}
 library(tidyverse)
@@ -373,7 +373,7 @@ ggplot(DATA_summary, aes(x = prob_truth, y = prob_pred)) +
 ggsave(file = 'Data/Prob_Overall_compare.pdf', width = 8, height = 6)
 ```
 
-Finally, we present the trace plots for the estimates of the regression coefficients $(\alpha_1, \alpha_2, \alpha_3, \alpha_4)$, as well as the initial basis coefficient vector values $(\xi_{11}(1), \xi_{21}(1), \xi_{31}(1))$. The respective true values are represented by orange horizontal lines. The trace plots indicate that BMSTLM accurately estimates both the county-level regression coefficients and the basis coefficient vector values, and successfully identifies non-zero county-level regression coefficients.
+Finally, we present the trace plots for the estimates of the regression coefficients $(\alpha_1, \alpha_2, \alpha_3, \alpha_4)$, as well as the initial basis coefficient vector values $(\xi_{11}(1), \xi_{21}(1), \xi_{31}(1))$. The respective true values are represented by orange horizontal lines. The trace plots indicate that BHSTLR-NDE accurately estimates both the county-level regression coefficients and the basis coefficient vector values, and successfully identifies non-zero county-level regression coefficients.
 
 ```{r}
 load(file = 'Data/MCMCsamples.RData')
@@ -405,7 +405,7 @@ knitr::include_graphics('Data/Traceplot.pdf')
 
 ## Model Comparison
 
-At last, we implement "Area Linear", which is the Bayesian Binomial linear regression model using county-level covariates as predictors, and "BMSTLM Linear", where the demographic effect $G_{itj}$ of BMSTLM is modeled through a linear model based on the case's age and stratum.
+At last, we implement "Area Linear", which is the Bayesian Binomial linear regression model using county-level covariates as predictors, and "BHSTLR Linear", where the demographic effect $G_{itj}$ of BHSTLR-NDE is modeled through a linear model based on the case's age and stratum.
 
 
 ```{r eval = FALSE}
@@ -421,7 +421,7 @@ source('Functions/GLMM.R')
 save(fit_bayes, log_lik, waic_result, file  = 'Data/GLMM_MCMCsamples.RData')
 ```
 
-We compare these models using the Watanabe-Akaike Information Criterion (WAIC). The results indicate that BMSTLM achieves the best performance with the lowest WAIC of $74715.38$, while the competitive models "Area Linear" and "BMSTLM Linear" achieve WAIC values of $79238.85$ and $77940.32$, respectively.
+We compare these models using the Watanabe-Akaike Information Criterion (WAIC). The results indicate that BHSTLR-NDE achieves the best performance with the lowest WAIC of $74715.38$, while the competitive models "Area Linear" and "BHSTLR Linear" achieve WAIC values of $79238.85$ and $77940.32$, respectively.
 
 ```{r}
 load(file ='Data/MCMCsamples.RData')
@@ -430,6 +430,6 @@ load(file ='Data/BMSTLMLinear_MCMCsamples.RData')
 WAIC_BMSTLM_linear = waic_results$WAIC
 load(file ='Data/GLMM_MCMCsamples.RData')
 WAIC_GLMM = waic_result$estimates['waic','Estimate']
-cat(sprintf('The WAIC values of Area Linear, BMSTLM Linear, and BMSTLM are \n
+cat(sprintf('The WAIC values of Area Linear, BHSTLR Linear, and BHSTLR-NDE are \n
         %.2f, %.2f, %.2f, respectively', WAIC_GLMM, WAIC_BMSTLM_linear, WAIC_BMSTLM ))
 ```
